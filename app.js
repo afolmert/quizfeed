@@ -5,28 +5,49 @@
 /// <reference path='typings/node/node.d.ts' />
 /// <reference path='typings/lodash/lodash.d.ts' />
 /// <reference path='typings/yargs/yargs.d.ts' />
+/// <reference path='typings/async/async.d.ts' />
 var fs = require('fs');
+var async = require('async');
 var quizfeed = require('./lib/quizfeed');
 var utils = require('./lib/utils');
 function testLoadEntries(filepath) {
-    var entries = quizfeed.Entries.loadEntries(filepath);
+    quizfeed.Entries.loadEntries(filepath, function (error, entries) {
+        if (error) {
+            console.log('Error occurred ');
+            console.log('Error: ' + error.message);
+        }
+        else {
+            console.log('Entries loaded fine ');
+            console.log(entries);
+        }
+    });
 }
 function processFiles(filepaths, options) {
-    var entries = [];
-    filepaths.forEach(function (filepath) {
-        var tmp = quizfeed.Entries.loadEntries(filepath);
-        entries = entries.concat(tmp);
+    var allEntries = [];
+    async.each(filepaths, function (filepath, callback) {
+        quizfeed.Entries.loadEntries(filepath, function (error, entries) {
+            if (error) {
+                return callback(error);
+            }
+            allEntries = allEntries.concat(entries);
+            callback(null);
+        });
+    }, function (error) {
+        if (error) {
+            console.log('ERROR ' + error.message);
+            process.exit(1);
+        }
+        console.log('Loaded Entries ------------------ ');
+        console.log(allEntries);
+        if (options.shuffle) {
+            utils.shuffleArray(allEntries);
+        }
+        else if (options.sort) {
+            allEntries.sort(function (a, b) { return a.question.localeCompare(b.question); });
+        }
+        console.log('Output is --------------------------- ');
+        console.log(quizfeed.Entries.exportEntries(allEntries));
     });
-    console.log('Loaded Entries ------------------ ');
-    console.log(entries);
-    if (options.shuffle) {
-        utils.shuffleArray(entries);
-    }
-    else if (options.sort) {
-        entries.sort(function (a, b) { return a.question.localeCompare(b.question); });
-    }
-    console.log('Output is --------------------------- ');
-    -console.log(quizfeed.Entries.exportEntries(entries));
 }
 // main program
 var argv = require('yargs')

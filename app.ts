@@ -8,10 +8,11 @@
 /// <reference path='typings/node/node.d.ts' />
 /// <reference path='typings/lodash/lodash.d.ts' />
 /// <reference path='typings/yargs/yargs.d.ts' />
+/// <reference path='typings/async/async.d.ts' />
 
 import fs = require('fs');
 import _ = require('lodash');
-
+import async = require('async');
 
 import quizfeed = require('./lib/quizfeed');
 
@@ -22,33 +23,58 @@ import utils = require('./lib/utils');
 
 
 function testLoadEntries(filepath: string) {
-    var entries = quizfeed.Entries.loadEntries(filepath);
-
+    quizfeed.Entries.loadEntries(filepath, (error: any, entries: quizfeed.Entry[]) => {
+        if (error) {
+            console.log('Error occurred ');
+            console.log('Error: ' + error.message);
+        } else {
+            console.log('Entries loaded fine ');
+            console.log(entries);
+        }
+    });
 
 }
 
 
 
 
+
+
 function processFiles(filepaths: string[], options: any) {
 
-    var entries: quizfeed.Entry[] = [];
+    var allEntries: quizfeed.Entry[] = [];
 
-    filepaths.forEach(filepath => {
-        var tmp: quizfeed.Entry[] = quizfeed.Entries.loadEntries(filepath);
-        entries = entries.concat(tmp);
-    })
-    console.log('Loaded Entries ------------------ ');
-    console.log(entries);
+    async.each(filepaths, (filepath: string, callback: ErrorCallback) => {
 
-    if (options.shuffle) {
-        utils.shuffleArray(entries);
-    } else if (options.sort) {
-        entries.sort((a, b) => a.question.localeCompare(b.question));
-    }
+        quizfeed.Entries.loadEntries(filepath, (error: any, entries: quizfeed.Entry[]) => {
+            if (error) {
+                return callback(error);
+            }
+            allEntries = allEntries.concat(entries);
+            callback(null);
+        });
 
-    console.log('Output is --------------------------- ');
-    -	console.log(quizfeed.Entries.exportEntries(entries));
+    },
+    (error: any) => {
+        if (error) {
+            console.log('ERROR ' + error.message);
+            process.exit(1);
+        }
+
+        console.log('Loaded Entries ------------------ ');
+        console.log(allEntries);
+
+        if (options.shuffle) {
+            utils.shuffleArray(allEntries);
+        } else if (options.sort) {
+            allEntries.sort((a, b) => a.question.localeCompare(b.question));
+        }
+
+        console.log('Output is --------------------------- ');
+        console.log(quizfeed.Entries.exportEntries(allEntries));
+
+
+    });
 
 }
 

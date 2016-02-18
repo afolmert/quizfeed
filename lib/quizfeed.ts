@@ -1,12 +1,13 @@
 /// <reference path='../typings/node/node.d.ts' />
 /// <reference path='../typings/lodash/lodash.d.ts' />
+/// <reference path='../typings/async/async.d.ts' />
 
 
 
 
 import fs = require('fs');
 import _ = require('lodash');
-
+import async = require('async');
 
 import utils = require('./utils');
 
@@ -153,6 +154,9 @@ export class Entry {
     public answer: string;
     public shouldSwap: boolean;
 
+    public sourceFile: string;
+    public sourceLineNumber: number;
+
     constructor(question?: string, answer?: string) {
         this.question = question;
         this.answer = answer;
@@ -179,7 +183,7 @@ export class Entry {
     }
 
     toString() {
-        return `Entry: ${this.title}: ${this.question} ${this.answer} SWAP: ${this.shouldSwap}`;
+        return JSON.stringify(this);
     }
 }
 
@@ -187,51 +191,69 @@ export class Entry {
 
 export class Entries {
 
-    static loadLines(filepath: string): string[] {
-        var content: string = fs.readFileSync(filepath, 'utf8');
+    static loadLines(filepath: string, callback: (err: any, lines: string[]) => void) {
+        fs.readFile(filepath, (err, buffer) => {
+            if (err) {
+                return callback(err, null);
+            }
 
-        var lines: string[] = content.split(/\r\n|\n/);
-        return lines;
+            var lines: string[] = buffer.toString('utf8').split(/\r\n|\n/);
+            callback(null, lines);
+
+        });
+
     }
 
 
 
-    static loadEntries(filepath: string): Entry[] {
+    static loadEntries(filepath: string, callback: (error: any, entries: Entry[]) => void): void {
 
         var context: Context = new Context();
 
         if (!filepath) {
-            throw new Error('filepath cannot be empty');
+            return callback(new Error('Filepath cannot be empty'), null);
         }
-        if (!fs.existsSync(filepath)) {
-            throw new Error(`filepath ${filepath} is not a file`);
-        }
-
-        var result: Entry[] = [];
-        var lines: string[] = this.loadLines(filepath);
-
-        for (var i = 0; i < lines.length; i++) {
-            try {
-                var line: string = lines[i];
-                if (utils.isNullOrWhitespace(line)) {
-                    continue;
-                }
-                if (line.indexOf('#!') == 0) {
-                    context.update(line);
-                } else if (line.indexOf('#') == 0) {
-                    // comment ignoring
-
-                } else {
-                    var entry: Entry = Entry.parse(line, context);
-                    result.push(entry);
-                }
-
-            } catch (e) {
-                error(filepath, i, e.message);
+        fs.exists(filepath, (exists: boolean) => {
+            if (!exists) {
+                return callback(new Error('Filepath ' + filepath + ' does not exist'), null);
             }
-        }
-        return result;
+
+            this.loadLines(filepath, (err: any, lines: string[]) => {
+
+                if (err) {
+                    return callback(err, null);
+                }
+
+                var result: Entry[] = [];
+
+                for (var i = 0; i < lines.length; i++) {
+                    try {
+                        var line: string = lines[i];
+                        if (utils.isNullOrWhitespace(line)) {
+                            continue;
+                        }
+                        if (line.indexOf('#!') == 0) {
+                            context.update(line);
+                        } else if (line.indexOf('#') == 0) {
+                            // comment ignoring
+
+                        } else {
+                            var entry: Entry = Entry.parse(line, context);
+                            entry.sourceLineNumber = i;
+                            entry.sourceFile = filepath;
+                            result.push(entry);
+                        }
+
+                    } catch (e) {
+                        return callback(new Error(`${filepath} line ${i}: ${e.message}`), null);
+                    }
+                }
+                callback(null, result);
+            });
+        });
+
     }
+
 
 
     static buildExportLine(title: string, question: string, answer: string): string {
@@ -255,9 +277,7 @@ export class Entries {
             if (entry.shouldSwap) {
                 result += this.buildExportLine(entry.title, entry.answer, entry.question) + '\n';
             }
-
         });
-
         return result;
 
 
