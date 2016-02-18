@@ -151,12 +151,12 @@ export class Entry {
     }
 
 
-    static parse(input: string, context: Context): Entry {
+    static parse(input: string, context: Context): [Entry, Error] {
 
         let parts: string[] = input.split(context.separator);
 
         if (parts.length != 2) {
-            throw new Error('Error parsing input ' + input + ' parsed parts are ' + JSON.stringify(parts, null, 2));
+            return [null, new Error('Error parsing input ' + input + ' parsed parts are ' + JSON.stringify(parts, null, 2))];
         }
 
         let result: Entry = new Entry();
@@ -166,7 +166,7 @@ export class Entry {
         result.shouldSwap = context.shouldSwap;
 
 
-        return result;
+        return [result, null];
 
     }
 
@@ -226,14 +226,17 @@ export class Entries {
                             // comment ignoring
 
                         } else {
-                            let entry: Entry = Entry.parse(line, context);
+                            let [entry, error] = Entry.parse(line, context);
+                            if (error) {
+                                return callback(new Error(`${filepath} line ${i}: ${error.message}`), null);
+                            }
                             entry.sourceLineNumber = i;
                             entry.sourceFile = filepath;
                             result.push(entry);
                         }
 
                     } catch (e) {
-                        return callback(new Error(`${filepath} line ${i}: ${e.message}`), null);
+                        return callback(e.message, null);
                     }
                 }
                 callback(null, result);
