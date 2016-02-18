@@ -55,7 +55,7 @@ describe('quizfeed.Option', function () {
         done();
     });
     it('should be able to parse advanced options', function (done) {
-        //var option: quizfeed.Option = quizfeed.Option.parse('#![option(test)]');
+        //let option: quizfeed.Option = quizfeed.Option.parse('#![option(test)]');
         // assert.deepEqual(option, new quizfeed.Option('option', 'test'));
         done();
     });
@@ -102,7 +102,9 @@ describe('quizfeed.Context', function () {
         context.update('#![separator(" ")]');
         assert.equal(context.separator.source, / /.source);
         context.update('#![separator(/abc/)]');
-        assert.equal(context.separator.source, /\/abc\//.source);
+        assert.equal(context.separator.source, /abc/.source);
+        context.update('#![separator($abc)]');
+        assert.equal(context.separator.source, /\$abc/.source);
         done();
     });
 });

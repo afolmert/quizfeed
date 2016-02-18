@@ -16,14 +16,14 @@ describe('utils.shuffleArray', function () {
 
     it('changes items order  ', function(done) {
 
-        var origArr = [1, 2, 3, 4, 5, 6];
-        var inputArr = origArr.slice(0);
-        var arr = utils.shuffleArray(inputArr);
+        let origArr = [1, 2, 3, 4, 5, 6];
+        let inputArr = origArr.slice(0);
+        let arr = utils.shuffleArray(inputArr);
 
         assert.deepEqual(arr, inputArr);
 
-        var sameCount = 0;
-        for (var i = 1; i < origArr.length; i++) {
+        let sameCount = 0;
+        for (let i = 1; i < origArr.length; i++) {
             assert.ok(arr.indexOf(origArr[i]) >= 0, 'Expected element ' + origArr[i] + 'missing ');
             if (arr.indexOf(origArr[i]) == i) {
                 sameCount++;
