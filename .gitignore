@@ -1,0 +1,6 @@
+*~
+.*~
+node_modules
+input
+all.js
+tsd-debug.log

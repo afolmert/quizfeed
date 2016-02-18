@@ -1,0 +1,3 @@
+alias r='node ./app.js ./input/test.quiz ./input/test2.quiz'
+alias t='npm test'
+alias b='tsc --module commonjs -p . --target es5 --out all.js'
