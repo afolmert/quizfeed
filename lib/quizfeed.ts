@@ -19,18 +19,6 @@ const OPTION_SEPARATOR: string = 'separator';
 const OPTION_TITLE: string = 'title';
 
 
-function error(filename: string, lineno: number, message: string) {
-    console.error('ERROR: ' + filename + ': ' + lineno + ': ' + message);
-    process.exit(1);
-
-}
-
-function warning(filename: string, lineno: number, message: string) {
-    console.error('WARNING: ' + filename + ': ' + lineno + ': ' + message);
-
-}
-
-
 export class Option {
     public name: string;
     public value: string;
@@ -52,7 +40,7 @@ export class Option {
 
     static parse(input: string): Option {
 
-        var result: Option = new Option();
+        let result: Option = new Option();
 
         if (utils.isNullOrWhitespace(input)) {
             throw new Error('Non-empty input expected');
@@ -68,9 +56,9 @@ export class Option {
 
         if (input.indexOf('(') >= 0) {
 
-            var regexp: RegExp = /^([a-zA-Z]+)\((.+)\)$/;
+            let regexp: RegExp = /^([a-zA-Z]+)\((.+)\)$/;
 
-            var match = regexp.exec(input);
+            let match = regexp.exec(input);
 
             if (match != null) {
                 result.name = match[1];
@@ -110,7 +98,7 @@ export class Context {
 
     static parseSeparator(input: string): RegExp {
 
-        var result: RegExp;
+        let result: RegExp;
         input = utils.stripQuotes(input);
         if (utils.startsWith(input, '/') && utils.endsWith(input, '/')) {
             result = new RegExp(input.substr(1, input.length - 2));
@@ -123,7 +111,7 @@ export class Context {
 
     update(input: string) {
 
-        var option: Option = Option.parse(input);
+        let option: Option = Option.parse(input);
 
         switch (option.name) {
             case OPTION_TITLE:
@@ -165,13 +153,13 @@ export class Entry {
 
     static parse(input: string, context: Context): Entry {
 
-        var parts: string[] = input.split(context.separator);
+        let parts: string[] = input.split(context.separator);
 
         if (parts.length != 2) {
             throw new Error('Error parsing input ' + input + ' parsed parts are ' + JSON.stringify(parts, null, 2));
         }
 
-        var result: Entry = new Entry();
+        let result: Entry = new Entry();
         result.question = parts[0];
         result.answer = parts[1];
         result.title = context.title.slice(0);
@@ -197,7 +185,7 @@ export class Entries {
                 return callback(err, null);
             }
 
-            var lines: string[] = buffer.toString('utf8').split(/\r\n|\n/);
+            let lines: string[] = buffer.toString('utf8').split(/\r\n|\n/);
             callback(null, lines);
 
         });
@@ -208,7 +196,7 @@ export class Entries {
 
     static loadEntries(filepath: string, callback: (error: any, entries: Entry[]) => void): void {
 
-        var context: Context = new Context();
+        let context: Context = new Context();
 
         if (!filepath) {
             return callback(new Error('Filepath cannot be empty'), null);
@@ -224,11 +212,11 @@ export class Entries {
                     return callback(err, null);
                 }
 
-                var result: Entry[] = [];
+                let result: Entry[] = [];
 
-                for (var i = 0; i < lines.length; i++) {
+                for (let i = 0; i < lines.length; i++) {
                     try {
-                        var line: string = lines[i];
+                        let line: string = lines[i];
                         if (utils.isNullOrWhitespace(line)) {
                             continue;
                         }
@@ -238,7 +226,7 @@ export class Entries {
                             // comment ignoring
 
                         } else {
-                            var entry: Entry = Entry.parse(line, context);
+                            let entry: Entry = Entry.parse(line, context);
                             entry.sourceLineNumber = i;
                             entry.sourceFile = filepath;
                             result.push(entry);
@@ -257,7 +245,7 @@ export class Entries {
 
 
     static buildExportLine(title: string, question: string, answer: string): string {
-        var result: string = '';
+        let result: string = '';
         if (!utils.isNullOrEmpty(title)) {
             result = `${title}: ${question}\t${answer}`;
         } else {
@@ -268,7 +256,7 @@ export class Entries {
 
     static exportEntries(entries: Entry[]): string {
 
-        var result: string = '';
+        let result: string = '';
 
         entries.forEach(entry => {
 

@@ -7,6 +7,7 @@
 /// <reference path='typings/yargs/yargs.d.ts' />
 /// <reference path='typings/async/async.d.ts' />
 var fs = require('fs');
+var _ = require('lodash');
 var async = require('async');
 var quizfeed = require('./lib/quizfeed');
 var utils = require('./lib/utils');
@@ -21,6 +22,33 @@ function testLoadEntries(filepath) {
             console.log(entries);
         }
     });
+}
+/**
+ * Analyze given entries , generating list of warnings if possible
+ */
+function analyzeEntries(entries) {
+    // check for duplicate questions
+    var entriesByQuestion = {};
+    entries.forEach(function (entry, idx) {
+        if (entry.question in entriesByQuestion) {
+            entriesByQuestion[entry.question].push(entry);
+        }
+        else {
+            entriesByQuestion[entry.question] = [entry];
+        }
+    });
+    var duplicates = _.filter(entriesByQuestion, function (value, key) {
+        return value.length > 1;
+    });
+    var warnings = [];
+    duplicates.forEach(function (entries) {
+        var warning = "WARNING: Duplicate question " + entries[0].question + " in ";
+        warning += _.map(entries, function (entry) {
+            return entry.sourceFile + ": line " + entry.sourceLineNumber;
+        }).join(', ');
+        warnings.push(warning);
+    });
+    return warnings;
 }
 function processFiles(filepaths, options) {
     var allEntries = [];
@@ -37,16 +65,20 @@ function processFiles(filepaths, options) {
             console.log('ERROR ' + error.message);
             process.exit(1);
         }
-        console.log('Loaded Entries ------------------ ');
-        console.log(allEntries);
         if (options.shuffle) {
             utils.shuffleArray(allEntries);
         }
         else if (options.sort) {
             allEntries.sort(function (a, b) { return a.question.localeCompare(b.question); });
         }
-        console.log('Output is --------------------------- ');
         console.log(quizfeed.Entries.exportEntries(allEntries));
+        if (options.warnings) {
+            var warnings = analyzeEntries(allEntries);
+            for (var _i = 0; _i < warnings.length; _i++) {
+                var w = warnings[_i];
+                console.error(w);
+            }
+        }
     });
 }
 // main program
@@ -59,10 +91,16 @@ var argv = require('yargs')
     .describe('t', 'Sets title for all generated entries')
     .help('h')
     .alias('h', 'help')
+    .alias('w', 'warnings')
     .alias('v', 'version')
     .describe('v', 'Shows quizfeed version')
     .describe('shuffle', 'Shuffle output order')
     .describe('sort', 'Sort output order')
+    .describe('warnings', 'Show warnings')
+    .boolean('warnings')
+    .boolean('sort')
+    .boolean('shuffle')
+    .boolean('version')
     .argv;
 if (argv.v) {
     var p = require('./package.json');
