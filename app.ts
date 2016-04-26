@@ -43,7 +43,7 @@ function analyzeEntries(entries: quizfeed.Entry[]): string[] {
 
     // check for duplicate questions
 
-    let entriesByQuestion: { [question: string]: quizfeed.Entry[] } = {};
+    const entriesByQuestion: { [question: string]: quizfeed.Entry[] } = {};
 
     entries.forEach((entry, idx) => {
         if (entry.question in entriesByQuestion) {
@@ -54,12 +54,12 @@ function analyzeEntries(entries: quizfeed.Entry[]): string[] {
 
     });
 
-    let duplicates: quizfeed.Entry[][] = _.filter(entriesByQuestion, (value, key) => {
+    const duplicates: quizfeed.Entry[][] = _.filter(entriesByQuestion, (value, key) => {
         return value.length > 1;
     });
 
 
-    let warnings: string[] = [];
+    const warnings: string[] = [];
 
     duplicates.forEach((entries: quizfeed.Entry[]) => {
 
@@ -109,8 +109,8 @@ function processFiles(filepaths: string[], options: any) {
 
         if (options.warnings) {
 
-            let warnings: string[] = analyzeEntries(allEntries);
-            for (let w of warnings) {
+            const warnings: string[] = analyzeEntries(allEntries);
+            for (const w of warnings) {
                 console.error(w);
             }
         }
@@ -121,7 +121,7 @@ function processFiles(filepaths: string[], options: any) {
 
 
 // main program
-let argv = require('yargs')
+const argv = require('yargs')
     .usage('Usage: quizfeed [options] [file...]')
     .example('quizfeed --swap --title "German words" file.txt', 'generates quiz for entries in given file.txt')
     .alias('s', 'swap')
@@ -146,7 +146,7 @@ let argv = require('yargs')
 
 
 if (argv.v) {
-    let p = require('./package.json');
+    const p = require('./package.json');
     console.log('version ' + p.version);
     process.exit(1);
 }
@@ -159,7 +159,7 @@ if (!argv._ || argv._.length == 0) {
 
 
 
-let filepaths: string[] = [];
+const filepaths: string[] = [];
 
 argv._.forEach(arg => {
     if (!fs.existsSync(arg)) {

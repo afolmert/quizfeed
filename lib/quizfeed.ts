@@ -40,7 +40,7 @@ export class Option {
 
     static parse(input: string): Option {
 
-        let result: Option = new Option();
+        const result: Option = new Option();
 
         if (utils.isNullOrWhitespace(input)) {
             throw new Error('Non-empty input expected');
@@ -56,9 +56,9 @@ export class Option {
 
         if (input.indexOf('(') >= 0) {
 
-            let regexp: RegExp = /^([a-zA-Z]+)\((.+)\)$/;
+            const regexp: RegExp = /^([a-zA-Z]+)\((.+)\)$/;
 
-            let match = regexp.exec(input);
+            const match = regexp.exec(input);
 
             if (match != null) {
                 result.name = match[1];
@@ -111,7 +111,7 @@ export class Context {
 
     update(input: string) {
 
-        let option: Option = Option.parse(input);
+        const option: Option = Option.parse(input);
 
         switch (option.name) {
             case OPTION_TITLE:
@@ -153,13 +153,13 @@ export class Entry {
 
     static parse(input: string, context: Context): [Entry, Error] {
 
-        let parts: string[] = input.split(context.separator);
+        const parts: string[] = input.split(context.separator);
 
         if (parts.length != 2) {
             return [null, new Error('Error parsing input ' + input + ' parsed parts are ' + JSON.stringify(parts, null, 2))];
         }
 
-        let result: Entry = new Entry();
+        const result: Entry = new Entry();
         result.question = parts[0];
         result.answer = parts[1];
         result.title = context.title.slice(0);
@@ -185,7 +185,7 @@ export class Entries {
                 return callback(err, null);
             }
 
-            let lines: string[] = buffer.toString('utf8').split(/\r\n|\n/);
+            const lines: string[] = buffer.toString('utf8').split(/\r\n|\n/);
             callback(null, lines);
 
         });
@@ -196,7 +196,7 @@ export class Entries {
 
     static loadEntries(filepath: string, callback: (error: any, entries: Entry[]) => void): void {
 
-        let context: Context = new Context();
+        const context: Context = new Context();
 
         if (!filepath) {
             return callback(new Error('Filepath cannot be empty'), null);
@@ -212,11 +212,12 @@ export class Entries {
                     return callback(err, null);
                 }
 
-                let result: Entry[] = [];
+                const result: Entry[] = [];
 
                 for (let i = 0; i < lines.length; i++) {
                     try {
-                        let line: string = lines[i];
+                        const line: string = lines[i];
+                        const lineNo: number = i + 1;
                         if (utils.isNullOrWhitespace(line)) {
                             continue;
                         }
@@ -226,17 +227,17 @@ export class Entries {
                             // comment ignoring
 
                         } else {
-                            let [entry, error] = Entry.parse(line, context);
+                            const [entry, error] = Entry.parse(line, context);
                             if (error) {
-                                return callback(new Error(`${filepath} line ${i}: ${error.message}`), null);
+                                return callback(new Error(`${filepath} line ${lineNo}: ${error.message}`), null);
                             }
-                            entry.sourceLineNumber = i;
+                            entry.sourceLineNumber = lineNo;
                             entry.sourceFile = filepath;
                             result.push(entry);
                         }
 
                     } catch (e) {
-                        return callback(e.message, null);
+                        return callback(e, null);
                     }
                 }
                 callback(null, result);

@@ -14,7 +14,7 @@ export function isNullOrEmpty(s: string): boolean {
 }
 
 export function isNullOrWhitespace(s: string): boolean {
-	return !s && s.trim().length == 0;
+	return !s || s.trim().length == 0;
 }
 
 
@@ -34,7 +34,7 @@ export function stripQuotes(s: string): string {
 }
 
 export function shuffleArray(array: any[]): any[] {
-    var counter = array.length, temp, index;
+    let counter = array.length, temp, index;
 
     // While there are elements in the array
     while (counter > 0) {
