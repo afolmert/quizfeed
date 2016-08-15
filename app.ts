@@ -150,12 +150,11 @@ function collectFilepaths(argv: any): string[] {
 
 function collectOptions(argv: any): Options {
     const result: Options = new Options();
-    let options = new Options();
-    options.warnings = argv.warnings;
-    options.shuffle = argv.shuffle;
-    options.swap = argv.swap;
-    options.title = argv.title;
-    options.sort = argv.sort;
+    result.warnings = argv.warnings;
+    result.shuffle = argv.shuffle;
+    result.swap = argv.swap;
+    result.title = argv.title;
+    result.sort = argv.sort;
     return result;
 
 }
